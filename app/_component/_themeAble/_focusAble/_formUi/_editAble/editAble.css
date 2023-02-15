@@ -1,0 +1,91 @@
+:host {
+  position: relative;
+  display: block;
+  --padding-side: 17px;
+}
+
+:host(:not(.disabled)) {
+  cursor: text;
+}
+
+
+move-me, content-body {
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+}
+
+content-body {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  position: relative;
+}
+
+component-body {
+  position: relative;
+}
+
+component-body.invalid #editAble {
+  color: red;
+}
+
+placeholder-container {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  display: block;
+  pointer-events: none;
+  border-radius: inherit;
+  overflow: hidden;
+  z-index: 1;
+  background-color: transparent;
+}
+
+placeholder-text {
+  font-size: inherit;
+  position: absolute;
+  display: block;
+  top: 0;
+  left: 0;
+  width: 100%;
+  user-select: none;
+  background-color: transparent;
+}
+
+
+
+#editAble {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  box-sizing: border-box;
+  border: none;
+  background: transparent;
+  font-size: inherit;
+  font-family: inherit;
+  color: inherit;
+}
+
+#editAble {
+  padding: 15px var(--padding-side);
+  padding-top: 0.571em;
+  padding-bottom: 0.571em;
+}
+
+placeholder-text {
+  padding: 15px var(--padding-side);
+  padding-top: 0.571em;
+  padding-bottom: 0.571em;
+}
+
+.tippy-box ul {
+  padding-left: 25px;
+  padding-right: 5px;
+  margin-top: 8px;
+  margin-bottom: 8px;
+  width: max-content;
+}

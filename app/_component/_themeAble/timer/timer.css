@@ -1,0 +1,44 @@
+:host {
+  background: rgba(255,255,255,.02);
+  box-shadow: 0 0 20px rgba(0,0,0,.1);
+  border-radius: 10px;
+}
+
+input-box {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+}
+c-input {
+  font-size: 25px;
+}
+
+c-block-button {
+  --background: 0, 0, 0, 0;
+  --morph-background: 255, 255, 255, 0.2;
+  --wave: 255, 255, 255;
+  --wave-opacity: 0.2;
+  color: white;
+  font-size: 18px;
+  margin-left: 5px;
+  --padding: 13px 18px
+}
+
+span {
+  margin: 0 4px;
+}
+
+c-input {
+  width: 50px;
+  --background: 0, 0, 0, 0;
+  color: white;
+  --morph-background: 255, 255, 255, 0.2;
+  --padding-side: 10px;
+}
+
+.hr {
+
+}

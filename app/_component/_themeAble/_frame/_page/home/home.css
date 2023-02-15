@@ -1,0 +1,19 @@
+component-body {
+  display: flex;
+  justify-content: center;
+}
+
+content-box {
+  width: 40%;
+  height: max-content;
+  display: flex;
+  flex-direction: column;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 20px 20px;
+}
+
+c-textarea {
+  width: 100%;
+  height: 200px;
+}

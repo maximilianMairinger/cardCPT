@@ -1,0 +1,9 @@
+component-body {
+  background: #F9FAFE;
+  height: 100%;
+}
+
+:host {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
