@@ -1,5 +1,5 @@
 import animationFrame from "animation-frame-delta"
-import delay from "delay";
+import delay from "tiny-delay";
 import { ElementList, EventListener } from "extended-dom";
 import { Data, DataBase } from "josm";
 import Button from "../_button/button";
@@ -24,7 +24,7 @@ function distance(p1: [number, number], p2: [number, number]) {
 
 let cursor: HTMLElement
 const cursorSize = 8
-const cursorColor = "white"
+const cursorColor = "black"
 
 let snatchCursorTo: HTMLElement
 // This is a global setting. When enabled a porint will follow the cursor. When a formUi element is hovered, the point will morph to the shape of the element. The point element exsists on the body once.
@@ -217,27 +217,37 @@ export default abstract class FormUi<T extends false | HTMLElement | HTMLAnchorE
 
 
     (() => {
+      let lastDelay = delay(0)
       if (cursor) {
-        const overListener = new EventListener(this, "mouseenter", () => {
+        const overListener = new EventListener(this.componentBody as HTMLElement, "mouseenter", () => {
           cursor.anim({
-            background: this.cursorMorphBackgroundColor,
             borderRadius: this.css("borderRadius"),
             top: 0,
             left: 0,
-          }, 200)
+          }, 300)
+          console.log("call")
+          lastDelay.cancel()
+          cursor.anim({background: this.cursorMorphBackgroundColor}, {duration: 160, easing: "easeOut"})
+          
+
           snatchCursorTo = this.moveBackground
         })
 
         overListener.deactivate()
   
-        const outListener = new EventListener(this, "mouseout", () => {
+        const outListener = new EventListener(this.componentBody as HTMLElement, "mouseout", () => {
 
           cursor.anim({
-            background: cursorColor,
             borderRadius: 100,
             top: -cursorSize/2,
             left: -cursorSize/2,
           }, {duration: 300, easing: "easeOut"})
+          lastDelay.cancel()
+          lastDelay = delay(150, () => {
+            cursor.anim({
+              background: cursorColor
+            }, {duration: 150, easing: "easeOut"})
+          })
 
 
           snatchCursorTo = undefined
