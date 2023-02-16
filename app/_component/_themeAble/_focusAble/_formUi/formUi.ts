@@ -225,7 +225,6 @@ export default abstract class FormUi<T extends false | HTMLElement | HTMLAnchorE
             top: 0,
             left: 0,
           }, 300)
-          console.log("call")
           lastDelay.cancel()
           cursor.anim({background: this.cursorMorphBackgroundColor}, {duration: 160, easing: "easeOut"})
           
@@ -235,7 +234,7 @@ export default abstract class FormUi<T extends false | HTMLElement | HTMLAnchorE
 
         overListener.deactivate()
   
-        const outListener = new EventListener(this.componentBody as HTMLElement, "mouseout", () => {
+        const outListener = new EventListener(this.componentBody as HTMLElement, "mouseleave", () => {
 
           cursor.anim({
             borderRadius: 100,
