@@ -10,6 +10,9 @@ import { renderedSym } from "./preHoverInteraction"
 if (window.TouchEvent === undefined) window.TouchEvent = class SurelyNotTouchEvent {} as any
 
 
+
+
+
 // todo: glow effect like on the google chrome tabs
 
 
@@ -26,6 +29,10 @@ let cursor: HTMLElement
 const cursorSize = 8
 const cursorColor = "black"
 
+
+
+
+let lastMorphCursorAnimDelay = delay(0)
 let snatchCursorTo: HTMLElement
 // This is a global setting. When enabled a porint will follow the cursor. When a formUi element is hovered, the point will morph to the shape of the element. The point element exsists on the body once.
 export function morphCursorToHover() {
@@ -217,15 +224,18 @@ export default abstract class FormUi<T extends false | HTMLElement | HTMLAnchorE
 
 
     (() => {
-      let lastDelay = delay(0)
+      let n = 0
       if (cursor) {
         const overListener = new EventListener(this.componentBody as HTMLElement, "mouseenter", () => {
+          
           cursor.anim({
             borderRadius: this.css("borderRadius"),
             top: 0,
             left: 0,
           }, 300)
-          lastDelay.cancel()
+          
+          if (n++ === 1) debugger
+          lastMorphCursorAnimDelay.cancel()
           cursor.anim({background: this.cursorMorphBackgroundColor}, {duration: 160, easing: "easeOut"})
           
 
@@ -241,8 +251,8 @@ export default abstract class FormUi<T extends false | HTMLElement | HTMLAnchorE
             top: -cursorSize/2,
             left: -cursorSize/2,
           }, {duration: 300, easing: "easeOut"})
-          lastDelay.cancel()
-          lastDelay = delay(150, () => {
+          lastMorphCursorAnimDelay.cancel()
+          lastMorphCursorAnimDelay = delay(150, () => {
             cursor.anim({
               background: cursorColor
             }, {duration: 150, easing: "easeOut"})
