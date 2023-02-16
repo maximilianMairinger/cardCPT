@@ -24,7 +24,7 @@ class HomePage extends Page {
 
 
   stl() {
-    return super.stl() + require("plyr/dist/plyr.css").toString() + require("./home.css").toString()
+    return super.stl() + require("./home.css").toString()
   }
   pug() {
     return require("./home.pug").default
