@@ -13,14 +13,14 @@ textarea::-webkit-scrollbar {
   display: none; /* for Chrome, Safari, and Opera */
 }
 
-placeholder-bg {
+/* placeholder-bg {
   height: 20px;
   opacity: 0;
   background: var(--background-color);
   position: relative;
   display: block;
   width: calc(100% - 10px);
-}
+} */
 
 placeholder-gradient {
   display: block;

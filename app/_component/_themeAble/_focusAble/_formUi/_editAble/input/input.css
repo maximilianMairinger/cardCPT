@@ -1,3 +1,7 @@
+:host {
+  height: 3.6em;
+}
+
 left-gradient {
   left: 17px;
   display: block;

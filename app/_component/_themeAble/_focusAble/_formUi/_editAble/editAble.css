@@ -1,6 +1,7 @@
 :host {
   position: relative;
   display: block;
+  font-size: 15px;
   --padding-side: 17px;
 }
 
@@ -72,14 +73,10 @@ placeholder-text {
 
 #editAble {
   padding: 15px var(--padding-side);
-  padding-top: 0.571em;
-  padding-bottom: 0.571em;
 }
 
 placeholder-text {
   padding: 15px var(--padding-side);
-  padding-top: 0.571em;
-  padding-bottom: 0.571em;
 }
 
 .tippy-box ul {

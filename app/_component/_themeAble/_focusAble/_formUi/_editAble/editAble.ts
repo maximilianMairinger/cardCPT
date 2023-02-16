@@ -80,7 +80,7 @@ export default class EditAble extends FormUi {
 
       let localAnimDone = globalAnimDone = Symbol()
       this.componentBody.removeClass("animDone")
-      this.placeholderText.anim(up ? {paddingTop: ".5em", fontSize: "12px"} : {paddingTop: ".6em", fontSize: "1em"}, 200).then(() => {
+      this.placeholderText.anim(up ? {paddingTop: ".5em", fontSize: ".8em"} : {paddingTop: "1em", fontSize: "1em"}, 200).then(() => {
         if (localAnimDone === globalAnimDone) this.componentBody.addClass("animDone")
       })
     })
