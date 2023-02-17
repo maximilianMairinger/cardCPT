@@ -224,7 +224,6 @@ export default abstract class FormUi<T extends false | HTMLElement | HTMLAnchorE
 
 
     (() => {
-      let n = 0
       if (cursor) {
         const overListener = new EventListener(this.componentBody as HTMLElement, "mouseenter", () => {
           
@@ -234,7 +233,6 @@ export default abstract class FormUi<T extends false | HTMLElement | HTMLAnchorE
             left: 0,
           }, 300)
           
-          if (n++ === 1) debugger
           lastMorphCursorAnimDelay.cancel()
           cursor.anim({background: this.cursorMorphBackgroundColor}, {duration: 160, easing: "easeOut"})
           
