@@ -29,7 +29,16 @@ component-body {
 }
 
 component-body.invalid #editAble {
-  color: red;
+  color: rgb(var(--error));
+}
+
+component-body.invalid placeholder-text {
+  color: rgb(var(--error));
+}
+
+
+component-body.invalid ::selection {
+  background-color: rgba(var(--error), .15);
 }
 
 placeholder-container {

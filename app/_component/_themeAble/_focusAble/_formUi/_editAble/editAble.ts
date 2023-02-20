@@ -1,5 +1,6 @@
+import keyIndex from "key-index"
 import { loadRecord } from "./../../../_frame/frame"
-import { Data, DataCollection } from "josm";
+import { Data, DataBase, DataCollection } from "josm";
 import ResablePromise from "../../../../../lib/resablePromise";
 import FormUi from "../formUi";
 import { EventListener } from "extended-dom"
@@ -8,12 +9,19 @@ import MultiMap from "multimap"
 import interpolateString from "josm-interpolate-string";
 
 
+
+
+
 type ReadonlyData<T> = Omit<Data<T>, "set">
 
+type ErrorTree = {[key in number]: {value: string, msg: string, children: ErrorTree}}
 
-type thenValidate = ((msg: string | ReadonlyData<string>, cb: (input: string) => boolean) => { remove: () => void, thenValidate: thenValidate }) & ((cb: (input: string) => boolean) => { remove: () => void, thenValidate: thenValidate })
+
+type thenValidate = (msg: string | ReadonlyData<string>, cb: ((input: string) => boolean) | ReadonlyData<boolean>) => { remove: () => void, thenValidate: thenValidate }
 // @ts-ignore
 let tippy: Promise<typeof import("/Users/maximilianmairinger/projects/virtualCottage/node_modules/tippy.js/index")["default"]>
+
+
 
 export default class EditAble extends FormUi {
 
@@ -28,6 +36,10 @@ export default class EditAble extends FormUi {
   protected placeholderText = ce("placeholder-text")
 
   protected placeholderUp: Data<boolean>
+
+
+  private evenShowErrorWhenEmpty: Data<boolean> = new Data(false)
+
   constructor(public inputElem: HTMLInputElement | HTMLTextAreaElement, placeholder = "") {
     super()
     inputElem.id = "editAble"
@@ -99,32 +111,63 @@ export default class EditAble extends FormUi {
     type Msgs = (string | ReadonlyData<string>)[]
     let msgs = [] as Msgs
 
-    this.value.get((v) => {
-      let valid = true
-      msgs = []
-      for (const [cb, msg] of this.cbs) {
-        if (!cb(v)) {
-          valid = false
-          if (msg !== undefined) msgs.push(msg)
-        }
-        else {
-          const rec = (cb) => {
-            const cbs = this.laterCbs.get(cb)
-            if (cbs !== undefined) {
-              for (const {cb, msg} of cbs) {
-                if (!cb(v)) {
-                  valid = false
-                  if (msg !== undefined) msgs.push(msg)
-                }
-                else rec(cb)
-              }
-            }
+
+
+    const parseMsg = (msg: ReadonlyData<string> | string) => {
+      return interpolateString(msg, {
+        value: this.value.get()
+      }, {v: "value", val: "value"})
+    }
+
+
+    const errorCount = new Data(0)
+    this.valid = errorCount.tunnel((count) => count === 0)
+
+
+
+    const errorMsgElements = ce("ul")
+    function propergateErrorMsgElems(error: DataBase<ErrorTree[number]>, parent: HTMLElement) {
+      const el = ce("li")
+      parent.apd(el)
+      el.txt(parseMsg(error.msg))
+
+      error.value.get((value) => {
+        if (value) el.show()
+        else el.hide()
+      })
+
+      return el
+    }
+
+    function keepTrackOfGlobalValidity(value: DataBase<ErrorTree[number]>["value"]) {
+      value.get((value) => {
+        if (value) errorCount.set(errorCount.get() + 1)
+        else errorCount.set(errorCount.get() - 1)
+      }, false)
+      if (value.get()) errorCount.set(errorCount.get() + 1)
+    }
+
+    function subToAllChildren(errorTree: DataBase<ErrorTree>, parent: HTMLElement) {
+      errorTree((full, diff) => {
+        setTimeout(() => {
+          for (const key in diff) {
+            if (diff[key] === undefined) continue
+            keepTrackOfGlobalValidity(errorTree[key].value)
+            const el = propergateErrorMsgElems(errorTree[key], parent)
+            subToAllChildren(errorTree[key].children, el)
           }
-          rec(cb)
-        }
-      }
-      (this.valid as Data<boolean>).set(valid)
+        })
+      }, false)
+    }
+
+    subToAllChildren(this.errorTree, errorMsgElements)
+
+    
+    this.showingInvalidity = new Data(false)
+    new DataCollection(this.valid as any, this.evenShowErrorWhenEmpty, isEmpty).get((valid, evenShowErrorWhenEmpty, isEmpty) => {
+      (this.showingInvalidity as any).set(!valid && (!isEmpty || evenShowErrorWhenEmpty))
     })
+
 
 
 
@@ -133,6 +176,11 @@ export default class EditAble extends FormUi {
       else this.untilValid.res()
     }, false)
 
+
+    this.showingInvalidity.get((invalid) => {
+      if (invalid) this.untilShowingValid = new ResablePromise()
+      else this.untilShowingValid.res()
+    }, false)
 
 
 
@@ -143,82 +191,63 @@ export default class EditAble extends FormUi {
     })
 
 
-    const updateTippy = () => {
-      tippy.then((tippy) => {
-        if (!this.valid.get()) {
-          const parseMsg = (msg: string) => {
-            return interpolateString(msg, {
-              value: this.value.get(),
-              val: this.value.get(),
-              v: this.value.get(),
-            })
-          }
-          const constrMsgHTML = (msg: Msgs[number]): Element => {
-            const li = ce("li")
-            return msg instanceof Array ? li.apd(...msg.map(constrMsgHTML)) : li.text(typeof msg === "string" ? parseMsg(msg) : msg.tunnel(parseMsg) as any)
-          }
-          const content = ce("ul").apd(...msgs.map(constrMsgHTML))
-          if (tip === undefined) {
-            tip = tippy(this as HTMLElement, {
-              content,
-              allowHTML: true,
-              placement: "top",
-              animation: "scale-subtle",
-              arrow: true,
-              theme: "light",
-              // trigger: "manual",
-              maxWidth: 300,
-              // interactive: true,
-              hideOnClick: false,
-              appendTo: this.componentBody as HTMLElement,
-              // popperOptions: {
-              //   modifiers: [
-              //     {
-              //       name: "offset",
-              //       options: {
-              //         offset: [0, 10],
-              //       },
-              //     },
-              //   ],
-              // },
-            })
-            this.valid.get((valid) => {
-              if (valid) tip.disable()
-            }, false)
-          }
-          else tip.setContent(content)
-
-          tip.enable()
-
-          // if still focused show
-          if (this.isFocused.get()) tip.show()
-          
+    const tip = tippy.then((tippy) => {
+      const tip = tippy(this as HTMLElement, {
+        content: errorMsgElements,
+        allowHTML: true,
+        placement: "top",
+        animation: "scale-subtle",
+        arrow: true,
+        theme: "light",
+        // trigger: "manual",
+        maxWidth: 300,
+        // interactive: true,
+        hideOnClick: false,
+        appendTo: this.componentBody as HTMLElement,
+        // popperOptions: {
+        //   modifiers: [
+        //     {
+        //       name: "offset",
+        //       options: {
+        //         offset: [0, 10],
+        //       },
+        //     },
+        //   ],
+        // },
+      })
+      this.showingInvalidity.get((invalid) => {
+        if (!invalid) {
+          tip.disable()
+          tip.hide()
         }
       })
+
+
+      return tip
+    })
+
+
+    const activateTippy = async () => {
+      const t = await tip
+      t.enable()
+      // if still focused show
+      if (this.isFocused.get()) t.show()
     }
 
-    const updateTippyOnChange = this.value.get(() => {
-      updateTippy()
-    }, false)
-    updateTippyOnChange.deactivate()
 
 
-    let tip: import("tippy.js").Instance
+
+
+
     this.onChange(() => {
-      if (!this.valid.get()) {
+      if (this.showingInvalidity.get()) {
         this.componentBody.addClass("invalid")
 
-        updateTippyOnChange.activate()
+        activateTippy()
 
-        this.untilValid.then(() => {
+        this.untilShowingValid.then(() => {
           this.componentBody.removeClass("invalid")
-          updateTippyOnChange.deactivate()
         })
-
-        updateTippy()
-
-
-
       } 
     }, false)
 
@@ -248,6 +277,8 @@ export default class EditAble extends FormUi {
     })
   }
 
+  public showingInvalidity: ReadonlyData<boolean>
+
   private onChangeListener = new LinkedList<(val: string) => void>()
   private onValidChangeListener = new LinkedList<(val: string) => void>()
   onChange(cb: (value: string) => void, onlyValid = true) {
@@ -255,6 +286,7 @@ export default class EditAble extends FormUi {
   }
 
   untilValid: ResablePromise<void> = ResablePromise.resolve() as any
+  untilShowingValid: ResablePromise<void> = ResablePromise.resolve() as any
 
 
 
@@ -263,53 +295,67 @@ export default class EditAble extends FormUi {
     return this.getContentBodyPromise !== undefined ? this.getContentBodyPromise : this.getContentBodyPromise = new ResablePromise()
   }
 
-  private cbs = new Map<(input: string) => boolean, string | ReadonlyData<string>>()
-  private laterCbs = new MultiMap<(input: string) => boolean, {cb: (input: string) => boolean, msg?: string | ReadonlyData<string>, remove: () => void}>()
-  validate(msg: string | ReadonlyData<string>, cb: (input: string) => boolean): { remove: () => void, thenValidate: thenValidate }
-  validate(cb: ((input: string) => boolean), msg_cb?: string | ReadonlyData<string>): { remove: () => void, thenValidate: thenValidate }
-  validate(cb_msg: string | ReadonlyData<string> | ((input: string) => boolean), msg_cb?: string | ReadonlyData<string> | ((input: string) => boolean)) {
-    const a = cb_msg instanceof Function
-    const cb = a ? cb_msg : msg_cb as (input: string) => boolean
-    const msg = (a ? msg_cb : cb_msg) as string | ReadonlyData<string>
-    this.cbs.set(cb, msg)
 
+  private errorTree: DataBase<ErrorTree> = new DataBase({}) as any
 
+  private errorTreeInfoMap = keyIndex<ErrorTree, {leadingIndex: number}>(() => {return {leadingIndex: 0}}, WeakMap)
+
+  validate(msg: string | ReadonlyData<string>, _cb: ((input: string) => boolean) | ReadonlyData<boolean>): { remove: () => void, thenValidate: thenValidate } {
+    const value = _cb instanceof Function ? this.value.tunnel(_cb) : _cb
+    
+    const info = this.errorTreeInfoMap(this.errorTree())
+
+    const id = info.leadingIndex
+    info.leadingIndex++
+    this.errorTree({[id]: {msg, value, children: {}}})
+    const deeperTree = this.errorTree[id].children
 
     const that = this
-    function thenValidate(msg: string | ReadonlyData<string>, cb: (input: string) => boolean): { remove: () => void, thenValidate: thenValidate }
-    function thenValidate(cb: (input: string) => boolean, msg_cb?: string | ReadonlyData<string>): { remove: () => void, thenValidate: thenValidate }
-    function thenValidate(cb_msg: string | ReadonlyData<string> | ((input: string) => boolean), msg_cb?: string | ReadonlyData<string> | ((input: string) => boolean), oldCB = cb) {
-      const a = cb_msg instanceof Function
-      const newCb = a ? cb_msg : msg_cb as (input: string) => boolean
-      const msg = (a ? msg_cb : cb_msg) as string | ReadonlyData<string>
+    function thenValidate(msg: string | ReadonlyData<string>, _newCb: ((input: string) => boolean) | ReadonlyData<boolean>, myErrorTree: DataBase<ErrorTree>) {
+      const value = _newCb instanceof Function ? that.value.tunnel(_newCb) : _newCb
 
-      const remove = () => {
-        that.laterCbs.delete(oldCB)
-        for (const {remove} of that.laterCbs.get(newCb)) remove()
-      }
+      const info = that.errorTreeInfoMap(myErrorTree())
 
-      that.laterCbs.set(oldCB, {cb: newCb, msg, remove})
+      const id = info.leadingIndex
+      info.leadingIndex++
+      myErrorTree({[id]: {msg, value, children: {}}})
+      const deeperTree = myErrorTree[id].children
 
       return {
-        remove,
+        remove: () => {
+          myErrorTree({[id]: undefined})
+        },
         thenValidate: (a, b) => {
           // @ts-ignore
-          return thenValidate(a, b, newCb)
+          return thenValidate(a, b, deeperTree)
         }
       }
     }
 
     return {
       remove: () => {
-        that.cbs.delete(cb)
-        for (const {remove} of that.laterCbs.get(cb)) remove()
+        this.errorTree({[id]: undefined})
       },
-      thenValidate
+      thenValidate: (msg: string | ReadonlyData<string>, _newCb: ((input: string) => boolean) | ReadonlyData<boolean>) => 
+        thenValidate(msg, _newCb, deeperTree)
+      
     }
   }
 
+  displayInvalidReminderIfNeeded() {
+    if (this.valid.get()) return
+    if (!this.evenShowErrorWhenEmpty.get()) {
+      this.evenShowErrorWhenEmpty.set(true)
+      this.focus(() => {
+        this.evenShowErrorWhenEmpty.set(false)
+      })
+    }
 
-  public valid: ReadonlyData<boolean> = new Data(true)
+    // todo: maybe wiggle when already showing invalidity
+  }
+
+
+  public valid: ReadonlyData<boolean>
 
   select() {
     this.inputElem.select()

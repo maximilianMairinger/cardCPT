@@ -4,7 +4,7 @@ import keyIndex from "key-index"
 import declareComponent from "../../../../lib/declareComponent";
 import Popup from "../popup";
 import BlockButton from "../../_focusAble/_formUi/_rippleButton/_blockButton/blockButton";
-import Input from "../../_focusAble/_formUi/_editAble/input/input";
+import Input from "../../_focusAble/_formUi/_editAble/_input/input";
 import Form from "../../../form/form";
 import TextBlob from "../../textBlob/textBlob";
 import { Data } from "josm";

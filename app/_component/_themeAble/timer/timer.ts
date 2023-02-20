@@ -2,8 +2,8 @@ import { ElementList } from "extended-dom";
 import { Data } from "josm";
 import declareComponent from "../../../lib/declareComponent";
 import ThemeAble from "../themeAble";
-import "./../_focusAble/_formUi/_editAble/input/input"
-import Input from "./../_focusAble/_formUi/_editAble/input/input"
+import "../_focusAble/_formUi/_editAble/_input/input"
+import Input from "../_focusAble/_formUi/_editAble/_input/input"
 import "./../_focusAble/_formUi/_rippleButton/_blockButton/blockButton"
 import Button from "./../_focusAble/_formUi/_rippleButton/_blockButton/blockButton"
 import toMs from "@sindresorhus/to-milliseconds"

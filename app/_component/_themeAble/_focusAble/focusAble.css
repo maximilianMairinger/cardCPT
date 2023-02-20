@@ -1,7 +1,7 @@
 :host {
   position: relative;
 
-  --focus: var(--primary-strongly-themed-background);
+  
 
 
   border: 1px solid rgba(var(--plain-text), .2);
@@ -9,6 +9,17 @@
   border: none;
   
 }
+
+component-body {
+  --focus: var(--primary-theme);
+}
+
+
+component-body.invalid {
+  --focus: var(--error);
+}
+
+
 
 focus-man {
   transform: scale(1.05);
